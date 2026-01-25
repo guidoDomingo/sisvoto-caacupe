@@ -41,11 +41,11 @@
                 <option value="Crítico">Crítico</option>
             </select>
 
-            <!-- Transporte -->
-            <select wire:model.live="filtroTransporte" class="border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="">Todos</option>
-                <option value="1">Necesita transporte</option>
-                <option value="0">No necesita</option>
+            <!-- Estado de Voto -->
+            <select wire:model.live="filtroEstadoVoto" class="border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">Todos los votos</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="votado">Ya votó</option>
             </select>
         </div>
 
@@ -119,7 +119,10 @@
                             Intención
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Estado
+                            Estado de Contacto
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Estado de Voto
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Acciones
@@ -150,11 +153,6 @@
                                         </span>
                                     @endif
                                 </div>
-                                @if($votante->local_votacion)
-                                    <div class="text-xs text-gray-500 mt-1" title="{{ $votante->descripcion_local }}">
-                                        {{ Str::limit($votante->local_votacion, 25) }}
-                                    </div>
-                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                 {{ $votante->telefono ?? '-' }}
@@ -199,6 +197,22 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                 {{ $votante->estado_contacto }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($votante->ya_voto)
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Ya votó
+                                    </span>
+                                    @if($votante->voto_registrado_en)
+                                        <div class="text-xs text-gray-400 mt-1">
+                                            {{ $votante->voto_registrado_en->format('d/m H:i') }}
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        Pendiente
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex gap-2">

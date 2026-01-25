@@ -15,6 +15,7 @@ class VotantesList extends Component
     public $search = '';
     public $filtroIntencion = '';
     public $filtroEstado = '';
+    public $filtroEstadoVoto = '';
     public $filtroTransporte = '';
     public $filtroLider = '';
     public $filtroDistrito = '';
@@ -48,7 +49,7 @@ class VotantesList extends Component
 
     public function limpiarFiltros()
     {
-        $this->reset(['search', 'filtroIntencion', 'filtroEstado', 'filtroTransporte', 'filtroLider', 'filtroDistrito']);
+        $this->reset(['search', 'filtroIntencion', 'filtroEstado', 'filtroEstadoVoto', 'filtroTransporte', 'filtroLider', 'filtroDistrito']);
         $this->resetPage();
     }
 
@@ -103,6 +104,14 @@ class VotantesList extends Component
 
         if ($this->filtroEstado) {
             $query->where('estado_contacto', $this->filtroEstado);
+        }
+
+        if ($this->filtroEstadoVoto !== '') {
+            if ($this->filtroEstadoVoto === 'votado') {
+                $query->where('ya_voto', true);
+            } elseif ($this->filtroEstadoVoto === 'pendiente') {
+                $query->where('ya_voto', false);
+            }
         }
 
         if ($this->filtroTransporte !== '') {

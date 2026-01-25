@@ -36,6 +36,8 @@ class VotanteForm extends Component
     public $codigo_distrito;
     public $codigo_seccion;
     public $seccion;
+    public $codigo_barrio;
+    public $barrio_tsje;
     public $local_votacion;
     public $descripcion_local;
     public $mesa;
@@ -64,8 +66,8 @@ class VotanteForm extends Component
             'codigo_intencion' => 'required|in:A,B,C,D,E',
             'estado_contacto' => 'required|in:Nuevo,Contactado,Re-contacto,Comprometido,Crítico',
             'necesita_transporte' => 'boolean',
-            'latitud' => 'nullable|numeric|between:-90,90',
-            'longitud' => 'nullable|numeric|between:-180,180',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
             'notas' => 'nullable|string|max:1000',
             
             // Reglas para campos TSJE
@@ -75,6 +77,8 @@ class VotanteForm extends Component
             'codigo_distrito' => 'nullable|string|max:10',
             'codigo_seccion' => 'nullable|string|max:10',
             'seccion' => 'nullable|string|max:100',
+            'codigo_barrio' => 'nullable|string|max:10',
+            'barrio_tsje' => 'nullable|string|max:100',
             'local_votacion' => 'nullable|string|max:200',
             'descripcion_local' => 'nullable|string|max:300',
             'mesa' => 'nullable|string|max:10',
@@ -250,6 +254,8 @@ class VotanteForm extends Component
         $this->codigo_distrito = $votante->codigo_distrito;
         $this->codigo_seccion = $votante->codigo_seccion;
         $this->seccion = $votante->seccion;
+        $this->codigo_barrio = $votante->codigo_barrio;
+        $this->barrio_tsje = $votante->barrio_tsje;
         $this->local_votacion = $votante->local_votacion;
         $this->descripcion_local = $votante->descripcion_local;
         $this->mesa = $votante->mesa;
@@ -284,7 +290,7 @@ class VotanteForm extends Component
             'codigo_departamento' => $this->codigo_departamento,
             'departamento' => $this->departamento,
             'codigo_distrito' => $this->codigo_distrito,
-            'distrito_tsje' => $this->distrito_tsje,
+            'distrito' => $this->distrito,
             'codigo_barrio' => $this->codigo_barrio,
             'barrio_tsje' => $this->barrio_tsje,
             'local_votacion' => $this->local_votacion,

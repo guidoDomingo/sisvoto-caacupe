@@ -175,11 +175,11 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Distrito TSJE</label>
                                 <div class="space-y-1">
-                                    <input wire:model="distrito_tsje" type="text" readonly
+                                    <input wire:model="distrito" type="text" readonly
                                         class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50">
                                     <div class="text-xs text-gray-500">Código: {{ $codigo_distrito ?? 'N/A' }}</div>
                                 </div>
-                                @error('distrito_tsje') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                                @error('distrito') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                             </div>
 
                             <div>
