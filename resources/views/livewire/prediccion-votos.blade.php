@@ -301,4 +301,149 @@
             @endif
         </div>
     </div>
+
+    <!-- Sección Informativa -->
+    <div class="mt-8 bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+                ¿Cómo funcionan las predicciones?
+            </h3>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Modelos de Predicción -->
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-3">📊 Modelos de Predicción</h4>
+                    
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h5 class="font-medium text-gray-900">Heurístico (Probabilidades fijas)</h5>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Calcula votos usando probabilidades fijas basadas en los códigos de intención:
+                                <strong>A=95%</strong>, <strong>B=75%</strong>, <strong>C=50%</strong>, <strong>D=25%</strong>, <strong>E=5%</strong>
+                            </p>
+                        </div>
+                        
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h5 class="font-medium text-gray-900">Monte Carlo (Simulación)</h5>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Realiza miles de simulaciones aleatorias considerando factores como abstención, 
+                                cambios de última hora, y variabilidad en los códigos de intención.
+                            </p>
+                        </div>
+                        
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h5 class="font-medium text-gray-900">Comparación Combinada</h5>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Muestra ambos métodos y calcula la diferencia entre ellos para evaluar 
+                                la consistencia de las predicciones.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Interpretación de Resultados -->
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-3">📈 Interpretando los Resultados</h4>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 rounded-lg p-3">
+                            <h5 class="font-medium text-blue-900">Media vs Mediana</h5>
+                            <p class="text-xs text-blue-700 mt-1">
+                                <strong>Media:</strong> Promedio de todas las simulaciones<br>
+                                <strong>Mediana:</strong> Valor central (50% de casos arriba/abajo)
+                            </p>
+                        </div>
+                        
+                        <div class="bg-yellow-50 rounded-lg p-3">
+                            <h5 class="font-medium text-yellow-900">Desviación Estándar</h5>
+                            <p class="text-xs text-yellow-700 mt-1">
+                                Mide la variabilidad. <strong>Menor = más predecible</strong>. 
+                                Valores típicos: 20-60 votos.
+                            </p>
+                        </div>
+                        
+                        <div class="bg-purple-50 rounded-lg p-3">
+                            <h5 class="font-medium text-purple-900">Intervalo de Confianza 80%</h5>
+                            <p class="text-xs text-purple-700 mt-1">
+                                Rango donde caerán el 80% de los resultados posibles. 
+                                <strong>Más estrecho = mayor certeza</strong>.
+                            </p>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-3">
+                            <h5 class="font-medium text-green-900">Diferencia entre Modelos</h5>
+                            <p class="text-xs text-green-700 mt-1">
+                                <strong>&lt;2%:</strong> Predicciones muy consistentes<br>
+                                <strong>2-5%:</strong> Consistentes<br>
+                                <strong>&gt;5%:</strong> Revisar datos
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Factores Considerados -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-base font-semibold text-gray-900 mb-3">⚙️ Factores Considerados en las Predicciones</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-2">📋 Datos Base</h5>
+                        <ul class="space-y-1">
+                            <li>• Códigos de intención (A, B, C, D, E)</li>
+                            <li>• Estado de contacto</li>
+                            <li>• Historial de contactos</li>
+                            <li>• Ubicación geográfica</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-2">🎯 Variables de Campaña</h5>
+                        <ul class="space-y-1">
+                            <li>• Efectividad por líder</li>
+                            <li>• Densidad por zona</li>
+                            <li>• Tiempo desde último contacto</li>
+                            <li>• Necesidad de transporte</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-2">🔄 Factores de Incertidumbre</h5>
+                        <ul class="space-y-1">
+                            <li>• Abstención electoral</li>
+                            <li>• Cambios de última hora</li>
+                            <li>• Condiciones del día electoral</li>
+                            <li>• Variabilidad estadística</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recomendaciones -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
+                    <h4 class="text-base font-semibold text-blue-900 mb-2 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M9.663 17h4.673a1.25 1.25 0 001.25-1.25v-2.5c0-.69.56-1.25 1.25-1.25a.75.75 0 000-1.5c-.69 0-1.25-.56-1.25-1.25v-2.5A1.25 1.25 0 0014.336 3H9.663a1.25 1.25 0 00-1.25 1.25v2.5C8.413 7.44 7.853 8 7.163 8a.75.75 0 000 1.5c.69 0 1.25.56 1.25 1.25v2.5A1.25 1.25 0 009.663 17zM12 10a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                        </svg>
+                        💡 Recomendaciones de Uso
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-800">
+                        <div>
+                            • <strong>Use "Comparación Combinada"</strong> para análisis completos<br>
+                            • <strong>Actualice datos regularmente</strong> para mayor precisión<br>
+                            • <strong>Compare intervalos de confianza</strong> para evaluar riesgo
+                        </div>
+                        <div>
+                            • <strong>Filtre por zona/líder</strong> para estrategias específicas<br>
+                            • <strong>Monitoree la desviación estándar</strong> como indicador de estabilidad<br>
+                            • <strong>Use múltiples iteraciones</strong> (1000+) para mayor precisión
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

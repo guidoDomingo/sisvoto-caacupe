@@ -87,14 +87,14 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <select wire:model.live="filtroBarrio" class="border-gray-300 rounded-lg">
                     <option value="">Todos los barrios</option>
-                    @foreach($votantesDisponibles->pluck('barrio')->unique()->filter() as $barrio)
+                    @foreach($barriosDisponibles as $barrio)
                         <option value="{{ $barrio }}">{{ $barrio }}</option>
                     @endforeach
                 </select>
 
                 <select wire:model.live="filtroZona" class="border-gray-300 rounded-lg">
                     <option value="">Todas las zonas</option>
-                    @foreach($votantesDisponibles->pluck('zona')->unique()->filter() as $zona)
+                    @foreach($zonasDisponibles as $zona)
                         <option value="{{ $zona }}">{{ $zona }}</option>
                     @endforeach
                 </select>

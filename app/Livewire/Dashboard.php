@@ -31,23 +31,16 @@ class Dashboard extends Component
         $metricsService = new MetricsService();
 
         // Métricas generales
-        if ($user->hasRole('Super Admin') || $user->hasRole('Coordinador')) {
-            $this->metricas = $metricsService->obtenerMetricas();
-            $this->prediccion = $predictionService->heuristicPrediction();
-            
-            // Líderes top por rendimiento
-            $this->lideresTop = Lider::withCount('votantes')
-                ->with('usuario')
-                ->orderBy('votantes_count', 'desc')
-                ->take(5)
-                ->get();
-        } elseif ($user->hasRole('Líder')) {
-            $lider = $user->lider;
-            if ($lider) {
-                $this->metricas = $metricsService->obtenerMetricasPorLider($lider->id);
-                $this->prediccion = $predictionService->heuristicPrediction(['lider_id' => $lider->id]);
-            }
-        }
+        // Temporalmente cargar métricas generales para todos los usuarios
+        $this->metricas = $metricsService->getGeneralMetrics();
+        $this->prediccion = $predictionService->heuristicPrediction();
+        
+        // Líderes top por rendimiento
+        $this->lideresTop = Lider::withCount('votantes')
+            ->with('usuario')
+            ->orderBy('votantes_count', 'desc')
+            ->take(5)
+            ->get();
 
         // Gastos recientes
         $this->gastosRecientes = Gasto::with('usuarioRegistro', 'viaje')

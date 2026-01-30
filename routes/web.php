@@ -10,6 +10,7 @@ use App\Livewire\LeaderDashboard;
 use App\Livewire\PrediccionVotos;
 use App\Livewire\ViajesList;
 use App\Livewire\VisitasList;
+use App\Livewire\DatosMaestros;
 use App\Http\Controllers\PlantillaController;
 
 /*
@@ -57,4 +58,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Visitas
     Route::get('/visitas', VisitasList::class)->name('visitas.index');
+    
+    // Datos Maestros
+    Route::get('/datos-maestros', DatosMaestros::class)->name('datos-maestros.index');
 });

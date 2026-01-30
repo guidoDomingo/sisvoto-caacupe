@@ -221,7 +221,7 @@ class TripPlanner extends Component
             ->where('ya_voto', false);
 
         if ($this->lider_id) {
-            $query->where('lider_id', $this->lider_id);
+            $query->where('lider_asignado_id', $this->lider_id);
         }
 
         if ($this->filtroBarrio) {
@@ -241,12 +241,33 @@ class TripPlanner extends Component
         $vehiculos = Vehiculo::where('disponible', true)->get();
         $choferes = Chofer::where('disponible', true)->get();
         $lideres = Lider::with('usuario')->get();
+        
+        // Obtener barrios y zonas únicos de votantes que necesitan transporte
+        $barriosDisponibles = Votante::where('necesita_transporte', true)
+                                   ->where('ya_voto', false)
+                                   ->whereNotNull('barrio')
+                                   ->distinct()
+                                   ->pluck('barrio')
+                                   ->filter()
+                                   ->sort()
+                                   ->values();
+                                   
+        $zonasDisponibles = Votante::where('necesita_transporte', true)
+                                  ->where('ya_voto', false)
+                                  ->whereNotNull('zona')
+                                  ->distinct()
+                                  ->pluck('zona')
+                                  ->filter()
+                                  ->sort()
+                                  ->values();
 
         return view('livewire.trip-planner', [
             'votantesDisponibles' => $votantesDisponibles,
             'vehiculos' => $vehiculos,
             'choferes' => $choferes,
             'lideres' => $lideres,
+            'barriosDisponibles' => $barriosDisponibles,
+            'zonasDisponibles' => $zonasDisponibles,
         ])->layout('layouts.app');
     }
 }
