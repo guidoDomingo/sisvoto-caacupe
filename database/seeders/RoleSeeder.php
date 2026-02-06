@@ -14,9 +14,9 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             [
-                'nombre' => 'Admin',
-                'slug' => 'admin',
-                'descripcion' => 'Acceso total al sistema',
+                'nombre' => 'Super Admin',
+                'slug' => 'superadmin',
+                'descripcion' => 'Acceso total al sistema con permisos de administración completos',
                 'permisos' => [
                     'usuarios.crear',
                     'usuarios.editar',
@@ -42,6 +42,28 @@ class RoleSeeder extends Seeder
                 ],
             ],
             [
+                'nombre' => 'Coordinador',
+                'slug' => 'coordinador',
+                'descripcion' => 'Coordinador de campaña con permisos de gestión regional',
+                'permisos' => [
+                    'usuarios.ver',
+                    'usuarios.editar',
+                    'votantes.todos',
+                    'votantes.crear',
+                    'votantes.editar',
+                    'votantes.marcar_voto',
+                    'lideres.gestionar',
+                    'viajes.todos',
+                    'viajes.crear',
+                    'viajes.editar',
+                    'visitas.todas',
+                    'visitas.crear',
+                    'visitas.editar',
+                    'gastos.ver',
+                    'reportes.avanzados',
+                ],
+            ],
+            [
                 'nombre' => 'Líder',
                 'slug' => 'lider',
                 'descripcion' => 'Gestiona votantes, viajes y visitas sin poder marcar votos',
@@ -59,6 +81,34 @@ class RoleSeeder extends Seeder
                     'visitas.crear',
                     'visitas.editar',
                     'reportes.propios',
+                ],
+            ],
+            [
+                'nombre' => 'Voluntario',
+                'slug' => 'voluntario',
+                'descripcion' => 'Voluntario de campaña con permisos básicos',
+                'permisos' => [
+                    'votantes.ver',
+                    'votantes.propios',
+                    'contactos.registrar',
+                    'viajes.ver',
+                    'viajes.solicitar',
+                    'visitas.ver',
+                    'visitas.crear',
+                    'reportes.propios',
+                ],
+            ],
+            [
+                'nombre' => 'Auditor',
+                'slug' => 'auditor',
+                'descripcion' => 'Auditor del sistema con acceso de solo lectura',
+                'permisos' => [
+                    'votantes.ver',
+                    'viajes.ver',
+                    'visitas.ver',
+                    'gastos.ver',
+                    'reportes.avanzados',
+                    'auditorias.ver',
                 ],
             ],
             [
