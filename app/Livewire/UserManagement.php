@@ -1,0 +1,266 @@
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\WithPagination;
+use App\Models\User;
+use App\Models\Role;
+use App\Models\Lider;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
+
+class UserManagement extends Component
+{
+    use WithPagination;
+
+    public $search = '';
+    public $filtroRol = '';
+    public $filtroEstado = '';
+    public $perPage = 15;
+
+    // Modal properties
+    public $showModal = false;
+    public $editingUser = null;
+    public $userId = null;
+
+    // Form properties
+    public $name = '';
+    public $email = '';
+    public $password = '';
+    public $password_confirmation = '';
+    public $role_id = '';
+    public $telefono = '';
+    public $ci = '';
+    public $activo = true;
+
+    protected function rules()
+    {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'role_id' => 'required|exists:roles,id',
+            'telefono' => 'nullable|string|max:20',
+            'ci' => 'nullable|string|max:20|unique:users,ci',
+            'activo' => 'boolean',
+        ];
+
+        if ($this->editingUser) {
+            $rules['email'] = 'required|email|max:255|unique:users,email,' . $this->userId;
+            $rules['ci'] = 'nullable|string|max:20|unique:users,ci,' . $this->userId;
+            $rules['password'] = ['nullable', 'confirmed', Password::defaults()];
+        } else {
+            $rules['password'] = ['required', 'confirmed', Password::defaults()];
+        }
+
+        return $rules;
+    }
+
+    protected $messages = [
+        'name.required' => 'El nombre es obligatorio.',
+        'email.required' => 'El email es obligatorio.',
+        'email.email' => 'Debe ser un email válido.',
+        'email.unique' => 'Este email ya está registrado.',
+        'password.required' => 'La contraseña es obligatoria.',
+        'password.confirmed' => 'La confirmación de contraseña no coincide.',
+        'role_id.required' => 'Debe seleccionar un rol.',
+        'role_id.exists' => 'El rol seleccionado no es válido.',
+        'ci.unique' => 'Este CI ya está registrado.',
+    ];
+
+    public function mount()
+    {
+        // Verificar que solo los admin puedan acceder
+        if (!Auth::user()->esAdmin()) {
+            abort(403, 'No tienes permisos para acceder a esta sección.');
+        }
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function limpiarFiltros()
+    {
+        $this->reset(['search', 'filtroRol', 'filtroEstado']);
+        $this->resetPage();
+    }
+
+    public function nuevoUsuario()
+    {
+        $this->reset(['name', 'email', 'password', 'password_confirmation', 'role_id', 'telefono', 'ci', 'activo']);
+        $this->editingUser = false;
+        $this->userId = null;
+        $this->activo = true;
+        $this->showModal = true;
+    }
+
+    public function editarUsuario($id)
+    {
+        $user = User::findOrFail($id);
+        
+        $this->userId = $user->id;
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->role_id = $user->role_id;
+        $this->telefono = $user->telefono;
+        $this->ci = $user->ci;
+        $this->activo = $user->activo;
+        $this->password = '';
+        $this->password_confirmation = '';
+        
+        $this->editingUser = true;
+        $this->showModal = true;
+    }
+
+    public function guardarUsuario()
+    {
+        $this->validate();
+
+        try {
+            if ($this->editingUser) {
+                $user = User::findOrFail($this->userId);
+                $oldRoleId = $user->role_id;
+                
+                $user->update([
+                    'name' => $this->name,
+                    'email' => $this->email,
+                    'role_id' => $this->role_id,
+                    'telefono' => $this->telefono,
+                    'ci' => $this->ci,
+                    'activo' => $this->activo,
+                ]);
+
+                if ($this->password) {
+                    $user->update(['password' => Hash::make($this->password)]);
+                }
+
+                // Si cambió de rol a líder, crear registro de líder
+                if ($oldRoleId != $this->role_id) {
+                    $newRole = Role::find($this->role_id);
+                    if ($newRole && $newRole->slug === 'lider' && !$user->lider) {
+                        Lider::create([
+                            'usuario_id' => $user->id,
+                            'territorio' => 'Por asignar',
+                            'telefono' => $this->telefono,
+                            'direccion' => 'Por definir',
+                        ]);
+                    }
+                }
+
+                session()->flash('message', 'Usuario actualizado exitosamente.');
+            } else {
+                $user = User::create([
+                    'name' => $this->name,
+                    'email' => $this->email,
+                    'password' => Hash::make($this->password),
+                    'role_id' => $this->role_id,
+                    'telefono' => $this->telefono,
+                    'ci' => $this->ci,
+                    'activo' => $this->activo,
+                ]);
+
+                // Si es líder, crear registro de líder automáticamente
+                $role = Role::find($this->role_id);
+                if ($role && $role->slug === 'lider') {
+                    Lider::create([
+                        'usuario_id' => $user->id,
+                        'territorio' => 'Por asignar',
+                        'telefono' => $this->telefono,
+                        'direccion' => 'Por definir',
+                    ]);
+                }
+
+                session()->flash('message', 'Usuario creado exitosamente.' . 
+                    ($role && $role->slug === 'lider' ? ' Se creó automáticamente el perfil de líder.' : ''));
+            }
+
+            $this->cerrarModal();
+            $this->dispatch('usuario-guardado');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al guardar el usuario: ' . $e->getMessage());
+        }
+    }
+
+    public function toggleEstado($id)
+    {
+        $user = User::findOrFail($id);
+        
+        // No permitir desactivar el propio usuario
+        if ($user->id === Auth::id()) {
+            session()->flash('error', 'No puedes desactivar tu propia cuenta.');
+            return;
+        }
+
+        $user->update(['activo' => !$user->activo]);
+        
+        $estado = $user->activo ? 'activado' : 'desactivado';
+        session()->flash('message', "Usuario {$estado} exitosamente.");
+    }
+
+    public function eliminarUsuario($id)
+    {
+        $user = User::findOrFail($id);
+        
+        // No permitir eliminar el propio usuario
+        if ($user->id === Auth::id()) {
+            session()->flash('error', 'No puedes eliminar tu propia cuenta.');
+            return;
+        }
+
+        // Verificar si el usuario tiene datos relacionados
+        $tieneVotantes = $user->votantesCreados()->exists();
+        $tieneContactos = $user->contactosRealizados()->exists();
+        
+        if ($tieneVotantes || $tieneContactos) {
+            session()->flash('error', 'No se puede eliminar el usuario porque tiene datos asociados.');
+            return;
+        }
+
+        $user->delete();
+        session()->flash('message', 'Usuario eliminado exitosamente.');
+    }
+
+    public function cerrarModal()
+    {
+        $this->showModal = false;
+        $this->reset(['name', 'email', 'password', 'password_confirmation', 'role_id', 'telefono', 'ci', 'activo']);
+        $this->editingUser = false;
+        $this->userId = null;
+        $this->resetErrorBag();
+    }
+
+    public function render()
+    {
+        $query = User::with('role')->orderBy('created_at', 'desc');
+
+        // Búsqueda
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('email', 'like', '%' . $this->search . '%')
+                    ->orWhere('ci', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Filtro por rol
+        if ($this->filtroRol) {
+            $query->where('role_id', $this->filtroRol);
+        }
+
+        // Filtro por estado
+        if ($this->filtroEstado !== '') {
+            $query->where('activo', $this->filtroEstado);
+        }
+
+        $usuarios = $query->paginate($this->perPage);
+        $roles = Role::all();
+
+        return view('livewire.user-management', [
+            'usuarios' => $usuarios,
+            'roles' => $roles,
+        ])->layout('layouts.app');
+    }
+}

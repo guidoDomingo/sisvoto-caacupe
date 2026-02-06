@@ -13,7 +13,16 @@ Route::middleware('guest')->group(function () {
         
         if (Auth::attempt($credentials, request()->filled('remember'))) {
             request()->session()->regenerate();
-            return redirect()->intended('dashboard');
+            
+            $user = Auth::user();
+            
+            // Redirigir según el rol del usuario
+            if ($user->esAdmin()) {
+                return redirect()->intended('dashboard');
+            } else {
+                // Para líderes y veedores, ir a votantes
+                return redirect()->intended('votantes');
+            }
         }
 
         return back()->withErrors([

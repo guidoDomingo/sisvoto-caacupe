@@ -21,7 +21,7 @@ class VotantesList extends Component
     public $filtroDistrito = '';
     public $sortBy = 'created_at';
     public $sortDir = 'desc';
-    public $perPage = 15;
+    public $perPage = 50;
 
     public $showModal = false;
     public $editingVotante = null;
@@ -33,6 +33,11 @@ class VotantesList extends Component
     ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPerPage()
     {
         $this->resetPage();
     }
@@ -61,6 +66,14 @@ class VotantesList extends Component
 
     public function marcarVoto($id)
     {
+        $user = Auth::user();
+        
+        // Verificar si el usuario tiene permisos para marcar votos
+        if (!$user->puedeMarcarVotos()) {
+            session()->flash('error', 'No tienes permisos para marcar votos.');
+            return;
+        }
+        
         $votante = Votante::findOrFail($id);
         $votante->ya_voto = true;
         $votante->voto_registrado_en = now();
@@ -82,9 +95,18 @@ class VotantesList extends Component
         $user = Auth::user();
         $query = Votante::query()->with('lider.usuario');
 
-        // Filtrar por líder si no es admin
-        if ($user->hasRole('Líder') && $user->lider) {
+        // Filtrar según el rol del usuario
+        if ($user->esAdmin()) {
+            // Los admins ven todos los votantes sin restricciones
+        } elseif ($user->esLider() && $user->lider) {
+            // Los líderes solo ven sus propios votantes
             $query->where('lider_asignado_id', $user->lider->id);
+        } elseif ($user->esVeedor()) {
+            // Los veedores pueden ver todos los votantes pero no modificarlos
+            // No aplicamos filtro adicional
+        } else {
+            // Si no tiene ningún rol válido, no puede ver votantes
+            $query->whereRaw('1 = 0'); // Consulta que no devuelve resultados
         }
 
         // Búsqueda
@@ -129,7 +151,20 @@ class VotantesList extends Component
         // Ordenamiento
         $query->orderBy($this->sortBy, $this->sortDir);
 
-        $votantes = $query->paginate($this->perPage);
+        // Paginación
+        if ($this->perPage === 'all') {
+            $votantes = $query->get();
+            // Convertir a formato compatible con paginación para la vista
+            $votantes = new \Illuminate\Pagination\LengthAwarePaginator(
+                $votantes,
+                $votantes->count(),
+                $votantes->count(),
+                1,
+                ['path' => request()->url()]
+            );
+        } else {
+            $votantes = $query->paginate($this->perPage);
+        }
 
         // Obtener líderes para filtro
         $lideres = Lider::with('usuario')->get();

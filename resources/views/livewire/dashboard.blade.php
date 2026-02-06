@@ -67,9 +67,11 @@
                             <div class="text-2xl font-semibold text-gray-900">
                                 {{ $metricas['contactados'] ?? 0 }}
                             </div>
+                            @if(isset($metricas['total_votantes']) && $metricas['total_votantes'] > 0)
                             <div class="ml-2 text-sm text-gray-600">
-                                ({{ number_format($metricas['porcentaje_contactados'] ?? 0, 1) }}%)
+                                ({{ number_format(($metricas['contactados'] / $metricas['total_votantes']) * 100, 1) }}%)
                             </div>
+                            @endif
                         </dd>
                     </dl>
                 </div>

@@ -60,16 +60,27 @@ class DatosMaestros extends Component
 
     public function guardar()
     {
-        $this->validate($this->obtenerReglasValidacion());
+        try {
+            $this->validate($this->obtenerReglasValidacion());
 
-        if ($this->modo === 'crear') {
-            $this->crear();
-        } else {
-            $this->actualizar();
+            if ($this->modo === 'crear') {
+                $this->crear();
+            } else {
+                $this->actualizar();
+            }
+
+            $this->cerrarModal();
+            
+            $tipo = substr($this->tipoActivo, 0, -1); // Quitar la 's' del final
+            $accion = $this->modo === 'crear' ? 'creado' : 'actualizado';
+            session()->flash('message', ucfirst($tipo) . ' ' . $accion . ' exitosamente.');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Los errores de validación se manejan automáticamente por Livewire
+            throw $e;
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al guardar: ' . $e->getMessage());
         }
-
-        $this->cerrarModal();
-        session()->flash('message', ucfirst($this->tipoActivo) . ' guardado exitosamente.');
     }
 
     private function crear()
@@ -108,19 +119,41 @@ class DatosMaestros extends Component
 
     public function eliminar($id)
     {
-        switch ($this->tipoActivo) {
-            case 'distritos':
-                Distrito::findOrFail($id)->delete();
-                break;
-            case 'zonas':
-                Zona::findOrFail($id)->delete();
-                break;
-            case 'barrios':
-                Barrio::findOrFail($id)->delete();
-                break;
+        try {
+            switch ($this->tipoActivo) {
+                case 'distritos':
+                    $distrito = Distrito::findOrFail($id);
+                    // Verificar si tiene zonas asociadas
+                    if ($distrito->zonas()->count() > 0) {
+                        session()->flash('error', 'No se puede eliminar el distrito porque tiene zonas asociadas.');
+                        return;
+                    }
+                    $distrito->delete();
+                    break;
+                case 'zonas':
+                    $zona = Zona::findOrFail($id);
+                    // Verificar si tiene barrios asociados
+                    if ($zona->barrios()->count() > 0) {
+                        session()->flash('error', 'No se puede eliminar la zona porque tiene barrios asociados.');
+                        return;
+                    }
+                    $zona->delete();
+                    break;
+                case 'barrios':
+                    $barrio = Barrio::findOrFail($id);
+                    // Verificar si tiene votantes asociados
+                    if ($barrio->votantes()->count() > 0) {
+                        session()->flash('error', 'No se puede eliminar el barrio porque tiene votantes asociados.');
+                        return;
+                    }
+                    $barrio->delete();
+                    break;
+            }
+            
+            session()->flash('message', ucfirst(substr($this->tipoActivo, 0, -1)) . ' eliminado exitosamente.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al eliminar: ' . $e->getMessage());
         }
-        
-        session()->flash('message', ucfirst($this->tipoActivo) . ' eliminado exitosamente.');
     }
 
     private function cargarItem($id)
@@ -178,21 +211,36 @@ class DatosMaestros extends Component
             'activo' => 'boolean'
         ];
 
+        // Agregar reglas de unicidad
+        $idExcluir = $this->itemEditando;
+        
         switch ($this->tipoActivo) {
             case 'distritos':
+                $reglas['nombre'] .= '|unique:distritos,nombre' . ($idExcluir ? ",$idExcluir" : '');
+                if ($this->codigo) {
+                    $reglas['codigo'] .= '|unique:distritos,codigo' . ($idExcluir ? ",$idExcluir" : '');
+                }
                 $reglas['departamento'] = 'nullable|string|max:100';
                 $reglas['poblacion_estimada'] = 'nullable|integer|min:0';
                 break;
                 
             case 'zonas':
+                $reglas['nombre'] .= '|unique:zonas,nombre' . ($idExcluir ? ",$idExcluir" : '');
+                if ($this->codigo) {
+                    $reglas['codigo'] .= '|unique:zonas,codigo' . ($idExcluir ? ",$idExcluir" : '');
+                }
                 $reglas['distrito_id'] = 'nullable|exists:distritos,id';
-                $reglas['color'] = 'required|string|size:7';
+                $reglas['color'] = 'required|string|regex:/^#[0-9A-Fa-f]{6}$/';
                 break;
                 
             case 'barrios':
+                $reglas['nombre'] .= '|unique:barrios,nombre' . ($idExcluir ? ",$idExcluir" : '');
+                if ($this->codigo) {
+                    $reglas['codigo'] .= '|unique:barrios,codigo' . ($idExcluir ? ",$idExcluir" : '');
+                }
                 $reglas['zona_id'] = 'nullable|exists:zonas,id';
-                $reglas['latitud'] = 'nullable|numeric';
-                $reglas['longitud'] = 'nullable|numeric';
+                $reglas['latitud'] = 'nullable|numeric|between:-90,90';
+                $reglas['longitud'] = 'nullable|numeric|between:-180,180';
                 break;
         }
 
@@ -231,12 +279,12 @@ class DatosMaestros extends Component
 
     public function render()
     {
-        $distritos = Distrito::orderBy('nombre')->get();
-        $zonas = Zona::with('distrito')->orderBy('nombre')->get();
-        $barrios = Barrio::with('zona.distrito')->orderBy('nombre')->get();
+        $distritos = Distrito::withCount('zonas')->orderBy('nombre')->get();
+        $zonas = Zona::with('distrito')->withCount('barrios')->orderBy('nombre')->get();
+        $barrios = Barrio::with('zona.distrito')->withCount('votantes')->orderBy('nombre')->get();
         
         $distritos_para_select = Distrito::activo()->orderBy('nombre')->get();
-        $zonas_para_select = Zona::activo()->orderBy('nombre')->get();
+        $zonas_para_select = Zona::activo()->with('distrito')->orderBy('nombre')->get();
 
         return view('livewire.datos-maestros', [
             'distritos' => $distritos,

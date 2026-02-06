@@ -11,6 +11,8 @@ use App\Livewire\PrediccionVotos;
 use App\Livewire\ViajesList;
 use App\Livewire\VisitasList;
 use App\Livewire\DatosMaestros;
+use App\Livewire\UserManagement;
+use App\Livewire\DataCleanup;
 use App\Http\Controllers\PlantillaController;
 
 /*
@@ -33,11 +35,14 @@ require __DIR__.'/auth.php';
 
 // Protected Routes
 Route::middleware(['auth'])->group(function () {
-    // Dashboard
-    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    // Dashboard (solo admin)
+    Route::get('/dashboard', Dashboard::class)
+        ->middleware('admin')
+        ->name('dashboard');
     
-    // Leader Dashboard
+    // Leader Dashboard (solo admin)
     Route::get('/lider/dashboard', LeaderDashboard::class)
+        ->middleware('admin')
         ->name('lider.dashboard');
     
     // Votantes
@@ -61,4 +66,10 @@ Route::middleware(['auth'])->group(function () {
     
     // Datos Maestros
     Route::get('/datos-maestros', DatosMaestros::class)->name('datos-maestros.index');
+    
+    // Gestión de Usuarios (solo para admin)
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/usuarios', UserManagement::class)->name('usuarios.index');
+        Route::get('/data-cleanup', DataCleanup::class)->name('data-cleanup.index');
+    });
 });

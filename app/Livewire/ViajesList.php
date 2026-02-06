@@ -116,11 +116,22 @@ class ViajesList extends Component
             ->orderBy('fecha_viaje', 'desc')
             ->orderBy('hora_salida', 'desc');
 
-        // Filtro por líder si es líder
-        if ($user->hasRole('Líder') && $user->lider) {
+        // Filtrar según rol del usuario
+        if ($user->esLider() && $user->lider) {
+            // Los líderes solo ven sus propios viajes
             $query->where('lider_responsable_id', $user->lider->id);
-        } elseif ($this->filtroLider) {
+        } elseif ($user->esAdmin() && $this->filtroLider) {
+            // Los admins pueden filtrar por líder específico
             $query->where('lider_responsable_id', $this->filtroLider);
+        } elseif ($user->esVeedor()) {
+            // Los veedores pueden ver todos los viajes pero no modificarlos
+            // Aplicar filtro por líder si existe
+            if ($this->filtroLider) {
+                $query->where('lider_responsable_id', $this->filtroLider);
+            }
+        } elseif (!$user->esAdmin()) {
+            // Si no tiene permisos, no ver ningún viaje
+            $query->whereRaw('1 = 0');
         }
 
         // Búsqueda

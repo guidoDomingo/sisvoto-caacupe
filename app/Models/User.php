@@ -115,19 +115,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Verificar si es super admin
+     * Verificar si es admin
      */
-    public function esSuperAdmin(): bool
+    public function esAdmin(): bool
     {
-        return $this->tieneRol('superadmin');
-    }
-
-    /**
-     * Verificar si es coordinador
-     */
-    public function esCoordinador(): bool
-    {
-        return $this->tieneRol('coordinador');
+        return $this->tieneRol('admin');
     }
 
     /**
@@ -139,11 +131,75 @@ class User extends Authenticatable
     }
 
     /**
-     * Verificar si es voluntario
+     * Verificar si es veedor
+     */
+    public function esVeedor(): bool
+    {
+        return $this->tieneRol('veedor');
+    }
+
+    /**
+     * Verificar si puede marcar votos
+     */
+    public function puedeMarcarVotos(): bool
+    {
+        return $this->tienePermiso('votantes.marcar_voto');
+    }
+
+    /**
+     * Verificar si puede ver votantes
+     */
+    public function puedeVerVotantes(): bool
+    {
+        return $this->tienePermiso('votantes.ver') || $this->tienePermiso('votantes.todos');
+    }
+
+    /**
+     * Verificar si puede crear votantes
+     */
+    public function puedeCrearVotantes(): bool
+    {
+        return $this->tienePermiso('votantes.crear');
+    }
+
+    /**
+     * Verificar si puede gestionar viajes
+     */
+    public function puedeGestionarViajes(): bool
+    {
+        return $this->tienePermiso('viajes.crear') || $this->tienePermiso('viajes.todos');
+    }
+
+    /**
+     * Verificar si puede gestionar visitas
+     */
+    public function puedeGestionarVisitas(): bool
+    {
+        return $this->tienePermiso('visitas.crear') || $this->tienePermiso('visitas.todas');
+    }
+
+    /**
+     * Verificar si es super admin
+     */
+    public function esSuperAdmin(): bool
+    {
+        return $this->esAdmin(); // Mantener compatibilidad
+    }
+
+    /**
+     * Verificar si es coordinador (mantener para compatibilidad)
+     */
+    public function esCoordinador(): bool
+    {
+        return $this->esAdmin(); // Los admins tienen permisos de coordinador
+    }
+
+    /**
+     * Verificar si es voluntario (mantener para compatibilidad)
      */
     public function esVoluntario(): bool
     {
-        return $this->tieneRol('voluntario');
+        return $this->esVeedor(); // Los veedores actúan como voluntarios
     }
 
     /**

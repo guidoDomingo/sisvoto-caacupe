@@ -83,26 +83,72 @@
                 </div>
             </div>
 
-            <!-- Filters -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <select wire:model.live="filtroBarrio" class="border-gray-300 rounded-lg">
-                    <option value="">Todos los barrios</option>
-                    @foreach($barriosDisponibles as $barrio)
-                        <option value="{{ $barrio }}">{{ $barrio }}</option>
-                    @endforeach
-                </select>
-
-                <select wire:model.live="filtroZona" class="border-gray-300 rounded-lg">
-                    <option value="">Todas las zonas</option>
-                    @foreach($zonasDisponibles as $zona)
-                        <option value="{{ $zona }}">{{ $zona }}</option>
-                    @endforeach
-                </select>
-
+            <!-- Selection Counter -->
+            <div class="mb-4 flex justify-between items-center">
                 <div class="bg-blue-50 px-4 py-2 rounded-lg">
                     <span class="text-sm font-medium text-blue-900">
-                        {{ count($votantesSeleccionados) }} votantes seleccionados
+                        {{ count($votantesSeleccionados) }} votante(s) seleccionado(s)
                     </span>
+                </div>
+                <div class="text-sm text-gray-500">
+                    Votantes que necesitan transporte y aún no votaron
+                </div>
+            </div>
+
+            <!-- Filtros Aplicados Info -->
+            <div class="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-medium text-gray-700">
+                        <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Filtros aplicados automáticamente
+                    </h4>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        {{ count($votantesDisponibles) }} de {{ $estadisticasFiltros['total'] }} votantes
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                            Necesitan transporte
+                        </span>
+                        <span class="font-medium">{{ $estadisticasFiltros['necesitan_transporte'] }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            Aún no han votado
+                        </span>
+                        <span class="font-medium">{{ $estadisticasFiltros['total'] - $estadisticasFiltros['ya_votaron'] }}</span>
+                    </div>
+                    
+                    @if($lider_id)
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center">
+                            <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                            Asignados a tu liderazgo
+                        </span>
+                        <span class="font-medium">{{ count($votantesDisponibles) }}</span>
+                    </div>
+                    @endif
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center">
+                            <span class="w-2 h-2 bg-red-400 rounded-full mr-2"></span>
+                            Ya votaron
+                        </span>
+                        <span class="font-medium">{{ $estadisticasFiltros['ya_votaron'] }}</span>
+                    </div>
+                </div>
+                
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <p class="text-xs text-gray-500">
+                        💡 Solo se muestran votantes que necesitan transporte y aún no han emitido su voto
+                    </p>
                 </div>
             </div>
 
@@ -119,7 +165,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dirección</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Barrio</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ubicación</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -141,7 +187,18 @@
                                     {{ $votante->direccion }}
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-600">
-                                    {{ $votante->barrio }}
+                                    <div class="flex flex-col">
+                                        @if($votante->barrio)
+                                            <span class="font-medium">{{ $votante->barrio }}</span>
+                                        @endif
+                                        @if($votante->zona)
+                                            <span class="text-xs text-gray-500">{{ $votante->zona }}</span>
+                                        @endif
+                                        @if($votante->distrito)
+                                            <span class="text-xs text-gray-500">{{ $votante->distrito }}</span>
+                                        @endif
+                                    </div>
+                                </td>
                                 </td>
                             </tr>
                         @empty
@@ -173,6 +230,47 @@
     <!-- Step 2: Configure Trip -->
     @if($paso === 2)
     <div class="space-y-6">
+        <!-- Destino del Viaje -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Destino del Viaje</h3>
+            <p class="text-sm text-gray-600 mb-4">Especifique el destino donde se dirigirán los votantes</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Distrito -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Distrito de Destino</label>
+                    <select wire:model.live="filtroDistrito" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Seleccione distrito</option>
+                        @foreach($distritosDisponibles as $distrito)
+                            <option value="{{ $distrito->id }}">{{ $distrito->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Zona -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Zona de Destino</label>
+                    <select wire:model.live="filtroZona" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500" {{ empty($zonasDisponibles) ? 'disabled' : '' }}>
+                        <option value="">{{ $filtroDistrito ? 'Seleccione zona' : 'Seleccione distrito primero' }}</option>
+                        @foreach($zonasDisponibles as $zona)
+                            <option value="{{ $zona->id }}">{{ $zona->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Barrio -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Barrio de Destino</label>
+                    <select wire:model.live="filtroBarrio" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500" {{ empty($barriosDisponibles) ? 'disabled' : '' }}>
+                        <option value="">{{ $filtroZona ? 'Seleccione barrio' : ($filtroDistrito ? 'Seleccione zona primero' : 'Seleccione distrito primero') }}</option>
+                        @foreach($barriosDisponibles as $barrio)
+                            <option value="{{ $barrio->id }}">{{ $barrio->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-6">Configuración del Viaje</h3>
 
@@ -229,9 +327,11 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Viáticos (₲)</label>
-                    <input wire:model="viaticos" type="number" min="0" 
-                           class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Costo Total del Viaje (₲) *</label>
+                    <input wire:model="viaticos" type="number" min="0" step="1000" required
+                           class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="Ej: 150000">
+                    <p class="text-xs text-gray-500 mt-1">Monto fijo total del viaje en guaraníes (incluye combustible, chofer, viáticos, etc.)</p>
                     @error('viaticos') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -259,7 +359,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 mb-6">Plan de Viajes Generado</h3>
 
                 <!-- Summary -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div class="bg-blue-50 rounded-lg p-4">
                         <div class="text-sm text-gray-600 mb-1">Total Votantes</div>
                         <div class="text-2xl font-bold text-blue-600">{{ $planGenerado['total_votantes'] }}</div>
@@ -267,12 +367,6 @@
                     <div class="bg-green-50 rounded-lg p-4">
                         <div class="text-sm text-gray-600 mb-1">Viajes Necesarios</div>
                         <div class="text-2xl font-bold text-green-600">{{ $planGenerado['total_viajes'] }}</div>
-                    </div>
-                    <div class="bg-yellow-50 rounded-lg p-4">
-                        <div class="text-sm text-gray-600 mb-1">Distancia Total</div>
-                        <div class="text-2xl font-bold text-yellow-600">
-                            {{ number_format(collect($planGenerado['grupos'])->sum('distancia_estimada_km'), 1) }} km
-                        </div>
                     </div>
                     <div class="bg-purple-50 rounded-lg p-4">
                         <div class="text-sm text-gray-600 mb-1">Costo Total</div>
@@ -282,16 +376,23 @@
                     </div>
                 </div>
 
+                <!-- Destino Info -->
+                @if(isset($planGenerado['destino_completo']))
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <h4 class="text-sm font-medium text-yellow-800 mb-1">Destino del Viaje</h4>
+                    <p class="text-lg text-yellow-900">{{ $planGenerado['destino_completo']['descripcion'] }}</p>
+                </div>
+                @endif
+
                 <!-- Trip Details -->
                 <div class="space-y-4">
                     @foreach($planGenerado['grupos'] as $index => $grupo)
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="flex justify-between items-center mb-3">
                                 <h4 class="font-semibold text-gray-900">Viaje #{{ $index + 1 }}</h4>
-                                <span class="text-sm text-gray-600">
+                                <span class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
                                     {{ count($grupo['votantes']) }} pasajeros • 
-                                    {{ number_format($grupo['distancia_estimada_km'], 1) }} km • 
-                                    ₲ {{ number_format($grupo['costo_estimado'], 0, ',', '.') }}
+                                    ₲ {{ number_format($grupo['costo_fijo'], 0, ',', '.') }}
                                 </span>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">

@@ -27,7 +27,7 @@ class LeaderDashboard extends Component
     {
         $user = Auth::user();
         
-        if ($user->hasRole('Líder') && $user->lider) {
+        if ($user->esLider() && $user->lider) {
             $this->lider = $user->lider;
             $this->cargarDatos();
         }

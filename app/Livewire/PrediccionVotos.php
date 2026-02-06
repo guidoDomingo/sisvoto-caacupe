@@ -23,7 +23,7 @@ class PrediccionVotos extends Component
     {
         $user = Auth::user();
         
-        if ($user->hasRole('Líder') && $user->lider) {
+        if ($user->esLider() && $user->lider) {
             $this->lider_id = $user->lider->id;
         }
     }
@@ -85,7 +85,7 @@ class PrediccionVotos extends Component
         $this->reset(['resultado', 'barrio', 'zona', 'distrito']);
         
         $user = Auth::user();
-        if (!($user->hasRole('Líder') && $user->lider)) {
+        if (!($user->esLider() && $user->lider)) {
             $this->lider_id = null;
         }
     }

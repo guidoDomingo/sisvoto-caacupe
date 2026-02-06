@@ -8,6 +8,9 @@ use App\Models\Vehiculo;
 use App\Models\Chofer;
 use App\Models\Lider;
 use App\Models\Viaje;
+use App\Models\Distrito;
+use App\Models\Zona;
+use App\Models\Barrio;
 use App\Services\TripPlannerService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,8 +22,13 @@ class TripPlanner extends Component
     // Paso 1: Selección
     public $lider_id;
     public $votantesSeleccionados = [];
-    public $filtroBarrio = '';
+    public $filtroDistrito = '';
     public $filtroZona = '';
+    public $filtroBarrio = '';
+    
+    // Para los dropdowns jerárquicos
+    public $zonasDisponibles = [];
+    public $barriosDisponibles = [];
 
     // Paso 2: Configuración
     public $vehiculo_id;
@@ -28,7 +36,12 @@ class TripPlanner extends Component
     public $fecha_viaje;
     public $hora_salida = '07:00';
     public $punto_partida;
-    public $viaticos = 20000;
+    public $viaticos = 150000; // Costo fijo por defecto en guaraníes
+    
+    // Destino del viaje (usando datos maestros)
+    public $distrito_destino_id;
+    public $zona_destino_id;
+    public $barrio_destino_id;
 
     // Paso 3: Resultado
     public $planGenerado = null;
@@ -48,12 +61,70 @@ class TripPlanner extends Component
         $user = Auth::user();
         
         // Solo asignar líder si el usuario es líder
-        if ($user->hasRole('Líder') && $user->lider) {
+        if ($user->esLider() && $user->lider) {
             $this->lider_id = $user->lider->id;
         }
-        // Si es Admin o Coordinador, no filtrar por líder
+        // Si es Admin, no filtrar por líder
+        // Si es Veedor, no puede crear viajes (se controlará en la vista)
 
         $this->fecha_viaje = now()->addDays(1)->format('Y-m-d');
+        $this->cargarZonasDisponibles();
+        $this->cargarBarriosDisponibles();
+    }
+
+    public function updatedFiltroDistrito()
+    {
+        $this->filtroZona = '';
+        $this->filtroBarrio = '';
+        $this->distrito_destino_id = $this->filtroDistrito;
+        $this->zona_destino_id = '';
+        $this->barrio_destino_id = '';
+        $this->cargarZonasDisponibles();
+        $this->cargarBarriosDisponibles();
+    }
+
+    public function updatedFiltroZona()
+    {
+        $this->filtroBarrio = '';
+        $this->zona_destino_id = $this->filtroZona;
+        $this->barrio_destino_id = '';
+        $this->cargarBarriosDisponibles();
+    }
+
+    public function updatedFiltroBarrio()
+    {
+        $this->barrio_destino_id = $this->filtroBarrio;
+    }
+
+    private function cargarZonasDisponibles()
+    {
+        if ($this->filtroDistrito) {
+            $this->zonasDisponibles = Zona::where('distrito_id', $this->filtroDistrito)
+                                          ->where('activo', true)
+                                          ->orderBy('nombre')
+                                          ->get();
+        } else {
+            $this->zonasDisponibles = Zona::where('activo', true)->orderBy('nombre')->get();
+        }
+    }
+
+    private function cargarBarriosDisponibles()
+    {
+        if ($this->filtroZona) {
+            $this->barriosDisponibles = Barrio::where('zona_id', $this->filtroZona)
+                                              ->where('activo', true)
+                                              ->orderBy('nombre')
+                                              ->get();
+        } elseif ($this->filtroDistrito) {
+            $this->barriosDisponibles = Barrio::whereHas('zona', function($query) {
+                                                  $query->where('distrito_id', $this->filtroDistrito);
+                                              })
+                                              ->where('activo', true)
+                                              ->orderBy('nombre')
+                                              ->get();
+        } else {
+            $this->barriosDisponibles = Barrio::where('activo', true)->orderBy('nombre')->get();
+        }
     }
 
     public function toggleVotante($votanteId)
@@ -114,6 +185,9 @@ class TripPlanner extends Component
                 return;
             }
 
+            // Obtener información del destino
+            $destinoInfo = $this->obtenerInformacionDestino();
+            
             // Agrupar votantes por capacidad del vehículo
             $capacidad = $vehiculo->capacidad_pasajeros;
             $grupos = $votantes->chunk($capacidad);
@@ -122,15 +196,12 @@ class TripPlanner extends Component
             $costoTotal = 0;
 
             foreach ($grupos as $index => $grupo) {
-                $distanciaEstimada = 20; // km aproximados por defecto
-                
-                // Calcular costo
-                $costoCombustible = $distanciaEstimada * $vehiculo->consumo_por_km * 7500;
-                $costoChofer = $chofer->costo_por_viaje;
-                $costoViaje = $costoCombustible + $costoChofer + $this->viaticos;
+                // Usar solo el viático como costo fijo total
+                $costoFijoViaje = $this->viaticos;
                 
                 $planGrupos[] = [
                     'numero_viaje' => $index + 1,
+                    'destino' => $destinoInfo,
                     'votantes' => $grupo->map(function($v) {
                         return [
                             'id' => $v->id,
@@ -139,15 +210,15 @@ class TripPlanner extends Component
                             'barrio' => $v->barrio,
                         ];
                     })->toArray(),
-                    'distancia_estimada_km' => $distanciaEstimada,
-                    'costo_estimado' => $costoViaje,
+                    'costo_fijo' => $costoFijoViaje,
                 ];
                 
-                $costoTotal += $costoViaje;
+                $costoTotal += $costoFijoViaje;
             }
 
             $this->planGenerado = [
                 'grupos' => $planGrupos,
+                'destino_completo' => $destinoInfo,
                 'total_viajes' => count($planGrupos),
                 'total_votantes' => $votantes->count(),
                 'costo_total' => $costoTotal,
@@ -182,12 +253,12 @@ class TripPlanner extends Component
                     'fecha_viaje' => $this->fecha_viaje,
                     'hora_salida' => $this->hora_salida,
                     'punto_partida' => $this->punto_partida,
-                    'destino' => 'Centro de votación',
-                    'distancia_estimada_km' => $grupo['distancia_estimada_km'],
-                    'costo_combustible' => ($grupo['distancia_estimada_km'] * 0.1 * 7500),
-                    'costo_chofer' => $chofer->costo_por_viaje,
+                    'destino' => $destinoInfo['descripcion'] ?? 'Centro de votación',
+                    'distancia_estimada_km' => 0, // No se calcula distancia
+                    'costo_combustible' => 0, // No se calcula por separado
+                    'costo_chofer' => 0, // No se calcula por separado
                     'viaticos' => $this->viaticos,
-                    'costo_total' => $grupo['costo_estimado'],
+                    'costo_total' => $grupo['costo_fijo'],
                     'estado' => 'Planificado',
                 ]);
 
@@ -210,8 +281,11 @@ class TripPlanner extends Component
 
     public function reiniciar()
     {
-        $this->reset(['paso', 'votantesSeleccionados', 'planGenerado']);
+        $this->reset(['paso', 'votantesSeleccionados', 'planGenerado', 'filtroDistrito', 'filtroZona', 'filtroBarrio']);
         $this->fecha_viaje = now()->addDays(1)->format('Y-m-d');
+        $this->viaticos = 150000; // Restablecer costo fijo por defecto
+        $this->cargarZonasDisponibles();
+        $this->cargarBarriosDisponibles();
     }
 
     private function obtenerVotantesDisponibles()
@@ -224,15 +298,51 @@ class TripPlanner extends Component
             $query->where('lider_asignado_id', $this->lider_id);
         }
 
-        if ($this->filtroBarrio) {
-            $query->where('barrio', $this->filtroBarrio);
-        }
+        return $query->orderBy('apellidos')->orderBy('nombres')->get();
+    }
 
-        if ($this->filtroZona) {
-            $query->where('zona', $this->filtroZona);
+    private function obtenerInformacionDestino()
+    {
+        $destino = [];
+        
+        if ($this->distrito_destino_id) {
+            $distrito = Distrito::find($this->distrito_destino_id);
+            $destino['distrito'] = $distrito ? $distrito->nombre : '';
         }
+        
+        if ($this->zona_destino_id) {
+            $zona = Zona::find($this->zona_destino_id);
+            $destino['zona'] = $zona ? $zona->nombre : '';
+        }
+        
+        if ($this->barrio_destino_id) {
+            $barrio = Barrio::find($this->barrio_destino_id);
+            $destino['barrio'] = $barrio ? $barrio->nombre : '';
+        }
+        
+        // Construir descripción del destino
+        $partes = array_filter($destino);
+        $destino['descripcion'] = !empty($partes) ? implode(', ', $partes) : 'Centro de votación';
+        
+        return $destino;
+    }
 
-        return $query->get();
+    public function obtenerEstadisticasFiltros()
+    {
+        $totalVotantes = Votante::count();
+        $necesitanTransporte = Votante::where('necesita_transporte', true)->count();
+        $yaVotaron = Votante::where('ya_voto', true)->count();
+        $disponibles = Votante::where('necesita_transporte', true)
+                              ->where('ya_voto', false)
+                              ->count();
+
+        return [
+            'total' => $totalVotantes,
+            'necesitan_transporte' => $necesitanTransporte,
+            'ya_votaron' => $yaVotaron,
+            'disponibles' => $disponibles,
+            'excluidos' => $totalVotantes - $disponibles
+        ];
     }
 
     public function render()
@@ -242,32 +352,21 @@ class TripPlanner extends Component
         $choferes = Chofer::where('disponible', true)->get();
         $lideres = Lider::with('usuario')->get();
         
-        // Obtener barrios y zonas únicos de votantes que necesitan transporte
-        $barriosDisponibles = Votante::where('necesita_transporte', true)
-                                   ->where('ya_voto', false)
-                                   ->whereNotNull('barrio')
-                                   ->distinct()
-                                   ->pluck('barrio')
-                                   ->filter()
-                                   ->sort()
-                                   ->values();
-                                   
-        $zonasDisponibles = Votante::where('necesita_transporte', true)
-                                  ->where('ya_voto', false)
-                                  ->whereNotNull('zona')
-                                  ->distinct()
-                                  ->pluck('zona')
-                                  ->filter()
-                                  ->sort()
-                                  ->values();
+        // Obtener distritos, zonas y barrios de los datos maestros
+        $distritosDisponibles = Distrito::where('activo', true)->orderBy('nombre')->get();
+        
+        // Obtener estadísticas de filtros
+        $estadisticasFiltros = $this->obtenerEstadisticasFiltros();
 
         return view('livewire.trip-planner', [
             'votantesDisponibles' => $votantesDisponibles,
             'vehiculos' => $vehiculos,
             'choferes' => $choferes,
             'lideres' => $lideres,
-            'barriosDisponibles' => $barriosDisponibles,
-            'zonasDisponibles' => $zonasDisponibles,
+            'distritosDisponibles' => $distritosDisponibles,
+            'zonasDisponibles' => $this->zonasDisponibles,
+            'barriosDisponibles' => $this->barriosDisponibles,
+            'estadisticasFiltros' => $estadisticasFiltros,
         ])->layout('layouts.app');
     }
 }

@@ -65,7 +65,7 @@ class VisitasList extends Component
     {
         $user = Auth::user();
         
-        if ($user->hasRole('Líder') && $user->lider) {
+        if ($user->esLider() && $user->lider) {
             $this->lider_id = $user->lider->id;
             $this->filtroLider = $user->lider->id;
         }
@@ -96,7 +96,7 @@ class VisitasList extends Component
         }
         
         $user = Auth::user();
-        if ($user->hasRole('Líder') && $user->lider) {
+        if ($user->esLider() && $user->lider) {
             $this->lider_id = $user->lider->id;
         }
         
@@ -209,11 +209,22 @@ class VisitasList extends Component
         $query = Visita::with(['votante', 'lider.usuario', 'usuarioRegistro'])
             ->orderBy('fecha_visita', 'desc');
 
-        // Filtro por líder si es líder
-        if ($user->hasRole('Líder') && $user->lider) {
+        // Filtrar según rol del usuario
+        if ($user->esLider() && $user->lider) {
+            // Los líderes solo ven sus propias visitas
             $query->where('lider_id', $user->lider->id);
-        } elseif ($this->filtroLider) {
+        } elseif ($user->esAdmin() && $this->filtroLider) {
+            // Los admins pueden filtrar por líder específico
             $query->where('lider_id', $this->filtroLider);
+        } elseif ($user->esVeedor()) {
+            // Los veedores pueden ver todas las visitas pero no modificarlas
+            // Aplicar filtro por líder si existe
+            if ($this->filtroLider) {
+                $query->where('lider_id', $this->filtroLider);
+            }
+        } elseif (!$user->esAdmin()) {
+            // Si no tiene permisos, no ver ninguna visita
+            $query->whereRaw('1 = 0');
         }
 
         // Búsqueda

@@ -248,4 +248,16 @@ class PredictionService
 
         return $histograma;
     }
+
+    /**
+     * Predicción heurística para un líder específico
+     *
+     * @param \App\Models\Lider $lider
+     * @return array
+     */
+    public function heuristicPredictionForLeader(\App\Models\Lider $lider): array
+    {
+        $votantes = $lider->votantes;
+        return $this->heuristicPrediction($votantes);
+    }
 }

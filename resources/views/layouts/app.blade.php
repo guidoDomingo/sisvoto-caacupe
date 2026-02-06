@@ -75,6 +75,7 @@
                    aria-label="Sidebar">
                 <div class="h-full px-3 pb-4 overflow-y-auto bg-white">
                     <ul class="space-y-2 font-medium">
+                        @if(Auth::user()->esAdmin())
                         <li>
                             <a href="{{ route('dashboard') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600' : '' }}">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -84,8 +85,7 @@
                             </a>
                         </li>
 
-                        @if(Auth::user()->hasRole('Líder'))
-                        <li>
+                        <!-- <li>
                             <a href="{{ route('lider.dashboard') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('lider.dashboard') ? 'bg-blue-50 text-blue-600' : '' }}">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
@@ -93,9 +93,10 @@
                                 </svg>
                                 <span class="ml-3">Mi Dashboard</span>
                             </a>
-                        </li>
+                        </li> -->
                         @endif
 
+                        @if(Auth::user()->puedeVerVotantes())
                         <li>
                             <a href="{{ route('votantes.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('votantes.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -104,7 +105,9 @@
                                 <span class="ml-3">Votantes</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(Auth::user()->esAdmin())
                         <li>
                             <a href="{{ route('predicciones') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('predicciones') ? 'bg-blue-50 text-blue-600' : '' }}">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -122,7 +125,9 @@
                                 <span class="ml-3">Importar</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(Auth::user()->puedeGestionarViajes())
                         <li>
                             <a href="{{ route('viajes.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('viajes.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -132,7 +137,9 @@
                                 <span class="ml-3">Viajes</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(Auth::user()->puedeGestionarVisitas())
                         <li>
                             <a href="{{ route('visitas.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('visitas.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -141,6 +148,7 @@
                                 <span class="ml-3">Visitas</span>
                             </a>
                         </li>
+                        @endif
 
                         <li>
                             <a href="{{ route('datos-maestros.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('datos-maestros.*') ? 'bg-blue-50 text-blue-600' : '' }}">
@@ -151,7 +159,27 @@
                             </a>
                         </li>
 
-                        @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Coordinador'))
+                        @if(Auth::user()->esAdmin())
+                        <li>
+                            <a href="{{ route('usuarios.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('usuarios.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path>
+                                </svg>
+                                <span class="ml-3">Gestión de Usuarios</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('data-cleanup.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('data-cleanup.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-3">Limpieza de Datos</span>
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->esAdmin() && (Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Coordinador')))
                         <li>
                             <a href="#" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
