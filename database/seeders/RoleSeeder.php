@@ -130,7 +130,7 @@ class RoleSeeder extends Seeder
                 [
                     'slug' => $rol['slug'],
                     'descripcion' => $rol['descripcion'],
-                    'permisos' => json_encode($rol['permisos']), // recuerda que permisos suele ser JSON
+                    'permisos' => $rol['permisos'], // dejar que Laravel maneje la conversión automáticamente
                 ]
             );
         }

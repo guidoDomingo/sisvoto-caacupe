@@ -39,6 +39,16 @@ class Role extends Model
             return false;
         }
 
-        return in_array($permiso, $this->permisos);
+        // Asegurar que permisos sea un array
+        $permisos = $this->permisos;
+        if (is_string($permisos)) {
+            $permisos = json_decode($permisos, true) ?: [];
+        }
+        
+        if (!is_array($permisos)) {
+            return false;
+        }
+
+        return in_array($permiso, $permisos);
     }
 }
