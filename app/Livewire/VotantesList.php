@@ -113,8 +113,8 @@ class VotantesList extends Component
         
         // Encabezados de las columnas
         $encabezados = [
-            'CI', 'NOMBRES', 'APELLIDOS', 'TELÉFONO', 'EMAIL', 'DIRECCIÓN', 
-            'BARRIO', 'ZONA', 'DISTRITO', 'MESA/ORDEN', 'LOCAL VOTACIÓN',
+            'CI', 'NOMBRES', 'APELLIDOS', 'TELÉFONO', 'EMAIL', 'LUGAR DE VOTACIÓN', 
+            'BARRIO', 'ZONA', 'DISTRITO', 'MESA/ORDEN', 'CÓDIGO LOCAL',
             'DEPARTAMENTO', 'LÍDER ASIGNADO', 'CÓDIGO INTENCIÓN', 'ESTADO CONTACTO',
             'NECESITA TRANSPORTE', 'YA VOTÓ', 'FECHA NACIMIENTO', 'NOTAS'
         ];
@@ -212,12 +212,12 @@ class VotantesList extends Component
                 $votante->apellidos,
                 $votante->telefono ?: '-',
                 $votante->email ?: '-',
-                $votante->direccion ?: '-',
+                $votante->descripcion_local ?: $votante->local_votacion ?: $votante->direccion ?: '-',
                 $votante->barrio ?: '-',
                 $votante->zona ?: '-',
                 $votante->distrito ?: '-',
                 $mesaOrden,
-                $votante->descripcion_local ?: '-',
+                $votante->local_votacion ?: '-',
                 $votante->departamento ?: '-',
                 $liderNombre,
                 $votante->codigo_intencion ?: '-',

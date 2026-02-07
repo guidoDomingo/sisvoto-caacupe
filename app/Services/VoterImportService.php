@@ -119,18 +119,80 @@ class VoterImportService
             return [];
         }
 
-        $encabezados = array_map('trim', array_shift($filas));
+        // Detectar fila de encabezados automáticamente
+        $filaEncabezados = $this->detectarFilaEncabezados($filas);
+        
+        if ($filaEncabezados === -1) {
+            // Si no se detectan encabezados, asumir primera fila
+            $encabezados = array_map('trim', array_shift($filas));
+        } else {
+            // Usar la fila detectada como encabezados
+            $encabezados = array_map('trim', $filas[$filaEncabezados]);
+            // Remover todas las filas anteriores a los datos
+            $filas = array_slice($filas, $filaEncabezados + 1);
+        }
+
         $datos = [];
 
         foreach ($filas as $fila) {
             if (count($fila) >= count($encabezados)) {
                 // Tomar solo las columnas necesarias para evitar problemas con columnas extra
                 $filaRecortada = array_slice($fila, 0, count($encabezados));
-                $datos[] = array_combine($encabezados, $filaRecortada);
+                
+                // Verificar que la fila no esté vacía (al menos debe tener CI o teléfono)
+                $esFilaValida = false;
+                foreach ($filaRecortada as $celda) {
+                    if (!empty(trim($celda)) && strlen(trim($celda)) > 2) {
+                        $esFilaValida = true;
+                        break;
+                    }
+                }
+                
+                if ($esFilaValida) {
+                    $datos[] = array_combine($encabezados, $filaRecortada);
+                }
             }
         }
 
         return $datos;
+    }
+
+    /**
+     * Detectar automáticamente la fila que contiene los encabezados
+     *
+     * @param array $filas
+     * @return int
+     */
+    private function detectarFilaEncabezados(array $filas): int
+    {
+        $encabezadosComunes = [
+            'numero_ced', 'ci', 'cedula', 'apellido', 'nombre', 'telefono', 'celular',
+            'direccion', 'email', 'fecha_naci', 'genero', 'sexo', 'nroreg'
+        ];
+
+        for ($i = 0; $i < min(5, count($filas)); $i++) {
+            $fila = $filas[$i];
+            $coincidencias = 0;
+            
+            foreach ($fila as $celda) {
+                if (!empty($celda)) {
+                    $celdaLower = strtolower(trim($celda));
+                    foreach ($encabezadosComunes as $encabezado) {
+                        if (strpos($celdaLower, $encabezado) !== false) {
+                            $coincidencias++;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Si encuentra al menos 3 encabezados conocidos, es probable que sea la fila correcta
+            if ($coincidencias >= 3) {
+                return $i;
+            }
+        }
+
+        return -1; // No se detectó fila de encabezados
     }
 
     /**
@@ -208,11 +270,13 @@ class VoterImportService
         }
 
         return [
-            // Mapeo para Excel TSJE
+            // Mapeo para Excel TSJE y formato ANR Caacupé
             'ci' => $filaNormalizada['numero_ced'] ?? $filaNormalizada['cedula'] ?? $filaNormalizada['ci'] ?? null,
             'nombres' => $filaNormalizada['nombre'] ?? $filaNormalizada['nombres'] ?? null,
             'apellidos' => $filaNormalizada['apellido'] ?? $filaNormalizada['apellidos'] ?? null,
             'direccion' => $filaNormalizada['direccion'] ?? null,
+            'telefono' => $filaNormalizada['celular'] ?? $filaNormalizada['telefono'] ?? $filaNormalizada['tel'] ?? null,
+            'genero' => $this->mapearGenero($filaNormalizada['sexo'] ?? $filaNormalizada['genero'] ?? null),
             'fecha_nacimiento' => $this->parsearFecha($filaNormalizada['fecha_naci'] ?? $filaNormalizada['fecha_nacimiento'] ?? $filaNormalizada['nacimiento'] ?? null),
             
             // Campos adicionales del Excel TSJE
@@ -221,29 +285,102 @@ class VoterImportService
             'departamento' => $filaNormalizada['desc_dep'] ?? null,
             'codigo_distrito' => $filaNormalizada['cod_dist'] ?? null,
             'distrito_tsje' => $filaNormalizada['desc_dis'] ?? $filaNormalizada['distrito'] ?? null,
-            'codigo_seccion' => $filaNormalizada['codigo_sec'] ?? null,
-            'seccion' => $filaNormalizada['desc_sec'] ?? null,
+            'codigo_seccion' => $filaNormalizada['codigo_sec'] ?? $filaNormalizada['secc'] ?? null,
+            'seccion' => $filaNormalizada['desc_sec'] ?? $filaNormalizada['secc'] ?? null,
             'codigo_barrio' => $filaNormalizada['codigo_sec'] ?? null,
             'barrio_tsje' => $filaNormalizada['desc_sec'] ?? null,
             'local_votacion' => $filaNormalizada['slocal'] ?? null,
             'descripcion_local' => $filaNormalizada['desc_locanr'] ?? null,
             'mesa' => $filaNormalizada['mesa'] ?? null,
             'orden' => $filaNormalizada['orden'] ?? null,
-            'fecha_afiliacion' => $this->parsearFecha($filaNormalizada['fecha_afil'] ?? null),
+            'fecha_afiliacion' => $this->parsearFecha($filaNormalizada['fecha_afil'] ?? $filaNormalizada['a.afil'] ?? null),
             
             // Campos estándar (compatibilidad con otros formatos)
-            'telefono' => $filaNormalizada['telefono'] ?? $filaNormalizada['tel'] ?? $filaNormalizada['celular'] ?? null,
             'email' => $filaNormalizada['email'] ?? $filaNormalizada['correo'] ?? null,
             'barrio' => $filaNormalizada['barrio'] ?? null,
             'zona' => $filaNormalizada['zona'] ?? null,
-            'genero' => $filaNormalizada['genero'] ?? $filaNormalizada['sexo'] ?? null,
-            'ocupacion' => $filaNormalizada['ocupacion'] ?? null,
+            'ocupacion' => $filaNormalizada['ocupacion'] ?? $filaNormalizada['abogado'] ?? null,
             'codigo_intencion' => strtoupper($filaNormalizada['codigo_intencion'] ?? $filaNormalizada['intencion'] ?? 'C'),
             'necesita_transporte' => $this->parsearBooleano($filaNormalizada['necesita_transporte'] ?? $filaNormalizada['transporte'] ?? false),
-            'notas' => $filaNormalizada['notas'] ?? $filaNormalizada['observaciones'] ?? null,
+            'notas' => $this->construirNotasExtendidas($filaNormalizada),
             'latitud' => $filaNormalizada['latitud'] ?? $filaNormalizada['lat'] ?? null,
             'longitud' => $filaNormalizada['longitud'] ?? $filaNormalizada['lon'] ?? $filaNormalizada['lng'] ?? null,
         ];
+    }
+
+    /**
+     * Mapear género de diferentes formatos
+     */
+    private function mapearGenero($valor): ?string
+    {
+        if (empty($valor)) {
+            return null;
+        }
+
+        $valorLower = strtolower(trim($valor));
+        
+        switch ($valorLower) {
+            case 'm':
+            case 'masculino':
+            case 'male':
+                return 'M';
+            case 'f':
+            case 'femenino':
+            case 'female':
+                return 'F';
+            default:
+                return strtoupper(substr($valor, 0, 1)); // Primera letra en mayúscula
+        }
+    }
+
+    /**
+     * Construir notas extendidas con información adicional del Excel
+     */
+    private function construirNotasExtendidas(array $filaNormalizada): ?string
+    {
+        $notas = [];
+        
+        // Notas explícitas del usuario
+        if (!empty($filaNormalizada['notas'])) {
+            $notas[] = trim($filaNormalizada['notas']);
+        }
+
+        // Información adicional del Excel ANR Caacupé
+        $infoAdicional = [];
+        
+        if (!empty($filaNormalizada['partido'])) {
+            $infoAdicional[] = "Partido: " . trim($filaNormalizada['partido']);
+        }
+
+        if (!empty($filaNormalizada['gral2021'])) {
+            $infoAdicional[] = "Gral2021: " . trim($filaNormalizada['gral2021']);
+        }
+
+        if (!empty($filaNormalizada['anr2022'])) {
+            $infoAdicional[] = "ANR2022: " . trim($filaNormalizada['anr2022']);
+        }
+
+        if (!empty($filaNormalizada['gral2023'])) {
+            $infoAdicional[] = "Gral2023: " . trim($filaNormalizada['gral2023']);
+        }
+
+        if (!empty($filaNormalizada['func_publicos'])) {
+            $infoAdicional[] = "Func. Públicos: " . trim($filaNormalizada['func_publicos']);
+        }
+
+        if (!empty($filaNormalizada['jubilados'])) {
+            $infoAdicional[] = "Jubilado: " . trim($filaNormalizada['jubilados']);
+        }
+
+        if (!empty($filaNormalizada['abogado'])) {
+            $infoAdicional[] = "Profesión: " . trim($filaNormalizada['abogado']);
+        }
+
+        if (!empty($infoAdicional)) {
+            $notas[] = "Info adicional: " . implode(' | ', $infoAdicional);
+        }
+
+        return !empty($notas) ? implode("\n", $notas) : null;
     }
 
     /**
@@ -388,6 +525,28 @@ class VoterImportService
         }
 
         $valor = trim($valor);
+        
+        // Si es un número (formato serial de Excel), convertirlo
+        if (is_numeric($valor)) {
+            try {
+                // Excel usa 1900-01-01 como fecha base (número serial 1)
+                // Pero tiene un bug donde trata 1900 como año bisiesto
+                $baseDate = new \DateTime('1900-01-01');
+                $days = intval($valor) - 1; // Restar 1 porque Excel cuenta desde 1
+                
+                // Ajustar por el bug de Excel del año 1900
+                if ($valor > 59) {
+                    $days -= 1;
+                }
+                
+                $fecha = clone $baseDate;
+                $fecha->add(new \DateInterval("P{$days}D"));
+                
+                return $fecha->format('Y-m-d');
+            } catch (\Exception $e) {
+                // Si falla la conversión, continúar con otros métodos
+            }
+        }
         
         // Intentar diferentes formatos comunes
         $formatos = [

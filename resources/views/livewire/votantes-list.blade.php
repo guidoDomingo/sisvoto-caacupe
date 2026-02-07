@@ -133,7 +133,7 @@
                             Teléfono
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Dirección
+                            Lugar de Votación
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Mesa/Orden
@@ -187,11 +187,13 @@
                                 {{ $votante->telefono ?? '-' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                <div class="max-w-xs truncate" title="{{ $votante->direccion }}">
-                                    {{ $votante->direccion ?? '-' }}
+                                <div class="max-w-xs truncate" title="{{ $votante->descripcion_local ?? $votante->local_votacion ?? $votante->direccion }}">
+                                    {{ $votante->descripcion_local ?? $votante->local_votacion ?? $votante->direccion ?? '-' }}
                                 </div>
-                                @if($votante->barrio)
-                                    <div class="text-xs text-gray-400">{{ $votante->barrio }}</div>
+                                @if($votante->local_votacion && $votante->descripcion_local)
+                                    <div class="text-xs text-gray-400">Cod: {{ $votante->local_votacion }}</div>
+                                @elseif($votante->seccion)
+                                    <div class="text-xs text-gray-400">Secc: {{ $votante->seccion }}</div>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
