@@ -222,14 +222,43 @@ class VotanteForm extends Component
                     'apellidos' => $this->apellidos
                 ]);
                 
-                // Disparar evento con datos para JavaScript
+                // Disparar evento con TODOS los datos para JavaScript
                 $this->dispatch('votante-encontrado-datos', [
                     'accion' => 'forzar-actualizacion',
                     'datos' => [
+                        // Datos básicos
                         'nombres' => $this->nombres,
                         'apellidos' => $this->apellidos,
                         'ci' => $this->ci,
-                        'telefono' => $this->telefono
+                        'telefono' => $this->telefono,
+                        'email' => $this->email,
+                        'direccion' => $this->direccion,
+                        'barrio' => $this->barrio,
+                        'zona' => $this->zona,
+                        'distrito' => $this->distrito,
+                        'latitud' => $this->latitud,
+                        'longitud' => $this->longitud,
+                        // Datos electorales
+                        'nro_registro' => $this->nro_registro,
+                        'codigo_departamento' => $this->codigo_departamento,
+                        'departamento' => $this->departamento,
+                        'codigo_distrito' => $this->codigo_distrito,
+                        'codigo_seccion' => $this->codigo_seccion,
+                        'seccion' => $this->seccion,
+                        'codigo_barrio' => $this->codigo_barrio,
+                        'barrio_tsje' => $this->barrio_tsje,
+                        'local_votacion' => $this->local_votacion,
+                        'descripcion_local' => $this->descripcion_local,
+                        'mesa' => $this->mesa,
+                        'orden' => $this->orden,
+                        'fecha_nacimiento' => $this->fecha_nacimiento,
+                        'fecha_afiliacion' => $this->fecha_afiliacion,
+                        // Datos de campaña
+                        'lider_asignado_id' => $this->lider_asignado_id,
+                        'codigo_intencion' => $this->codigo_intencion,
+                        'estado_contacto' => $this->estado_contacto,
+                        'necesita_transporte' => $this->necesita_transporte,
+                        'notas' => $this->notas
                     ]
                 ]);
                 

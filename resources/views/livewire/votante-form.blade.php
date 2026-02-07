@@ -418,18 +418,78 @@ document.addEventListener('livewire:initialized', () => {
                 }
             }
             
-            // Estrategia 2: Actualizar inputs manualmente como respaldo
+            // Estrategia 2: Actualizar TODOS los inputs manualmente como respaldo
             const datos = event[0]?.datos || event.datos;
             if (datos) {
-                const nombresInput = document.querySelector('input[wire\\:model="nombres"]');
-                const apellidosInput = document.querySelector('input[wire\\:model="apellidos"]');
-                const telefonoInput = document.querySelector('input[wire\\:model="telefono"]');
+                // Actualizar todos los campos básicos
+                const updateInput = (selector, value) => {
+                    const input = document.querySelector(selector);
+                    if (input && value !== null && value !== undefined) {
+                        input.value = value;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                };
                 
-                if (nombresInput && datos.nombres) nombresInput.value = datos.nombres;
-                if (apellidosInput && datos.apellidos) apellidosInput.value = datos.apellidos;
-                if (telefonoInput && datos.telefono) telefonoInput.value = datos.telefono;
+                // Actualizar select
+                const updateSelect = (selector, value) => {
+                    const select = document.querySelector(selector);
+                    if (select && value !== null && value !== undefined) {
+                        select.value = value;
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                };
+
+                // Actualizar checkbox
+                const updateCheckbox = (selector, value) => {
+                    const checkbox = document.querySelector(selector);
+                    if (checkbox && value !== null && value !== undefined) {
+                        checkbox.checked = Boolean(value);
+                        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                };
                 
-                console.log('✅ Inputs actualizados manualmente como respaldo');
+                // Datos personales
+                updateInput('input[wire\\:model="nombres"]', datos.nombres);
+                updateInput('input[wire\\:model="apellidos"]', datos.apellidos);
+                updateInput('input[wire\\:model="telefono"]', datos.telefono);
+                updateInput('input[wire\\:model="email"]', datos.email);
+                updateInput('input[wire\\:model="direccion"]', datos.direccion);
+                updateInput('input[wire\\:model="barrio"]', datos.barrio);
+                updateInput('input[wire\\:model="zona"]', datos.zona);
+                updateInput('input[wire\\:model="latitud"]', datos.latitud);
+                updateInput('input[wire\\:model="longitud"]', datos.longitud);
+                
+                // Datos electorales TSJE
+                updateInput('input[wire\\:model="nro_registro"]', datos.nro_registro);
+                updateInput('input[wire\\:model="codigo_departamento"]', datos.codigo_departamento);
+                updateInput('input[wire\\:model="departamento"]', datos.departamento);
+                updateInput('input[wire\\:model="codigo_distrito"]', datos.codigo_distrito);
+                updateInput('input[wire\\:model="codigo_seccion"]', datos.codigo_seccion);
+                updateInput('input[wire\\:model="seccion"]', datos.seccion);
+                updateInput('input[wire\\:model="codigo_barrio"]', datos.codigo_barrio);
+                updateInput('input[wire\\:model="barrio_tsje"]', datos.barrio_tsje);
+                updateInput('input[wire\\:model="local_votacion"]', datos.local_votacion);
+                updateInput('input[wire\\:model="descripcion_local"]', datos.descripcion_local);
+                updateInput('input[wire\\:model="mesa"]', datos.mesa);
+                updateInput('input[wire\\:model="orden"]', datos.orden);
+                updateInput('input[wire\\:model="fecha_nacimiento"]', datos.fecha_nacimiento);
+                updateInput('input[wire\\:model="fecha_afiliacion"]', datos.fecha_afiliacion);
+                updateInput('input[wire\\:model="distrito"]', datos.distrito);
+
+                // Datos de campaña
+                updateSelect('select[wire\\:model="lider_asignado_id"]', datos.lider_asignado_id);
+                updateSelect('select[wire\\:model="codigo_intencion"]', datos.codigo_intencion);
+                updateSelect('select[wire\\:model="estado_contacto"]', datos.estado_contacto);
+                updateCheckbox('input[wire\\:model="necesita_transporte"]', datos.necesita_transporte);
+                
+                // Notas/textarea
+                const notasTextarea = document.querySelector('textarea[wire\\:model="notas"]');
+                if (notasTextarea && datos.notas) {
+                    notasTextarea.value = datos.notas;
+                    notasTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                
+                console.log('✅ TODOS los inputs actualizados manualmente como respaldo');
             }
         }, 100);
     });
