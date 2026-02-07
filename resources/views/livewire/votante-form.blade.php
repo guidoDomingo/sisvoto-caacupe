@@ -364,6 +364,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Listener para actualización forzada cuando se encuentra un votante
+document.addEventListener('livewire:initialized', () => {
+    Livewire.on('votante-encontrado', () => {
+        console.log('Votante encontrado - Forzando actualización del formulario');
+        
+        // Forzar re-renderizado de todos los campos del formulario
+        setTimeout(() => {
+            const form = document.querySelector('form[wire\\:submit="guardar"]');
+            if (form) {
+                // Trigger refresh event para forzar actualización de Livewire
+                const inputs = form.querySelectorAll('input[wire\\:model], select[wire\\:model], textarea[wire\\:model]');
+                inputs.forEach(input => {
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+                
+                console.log('Formulario actualizado - ' + inputs.length + ' campos procesados');
+            }
+        }, 150);
+    });
+});
 </script>
 
 @push('styles')

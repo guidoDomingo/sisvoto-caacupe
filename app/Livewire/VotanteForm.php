@@ -154,43 +154,65 @@ class VotanteForm extends Component
                 ->first();
             
             if ($votanteExistente) {
-                // Llenar todos los campos con los datos encontrados
-                $this->nombres = $votanteExistente->nombres;
-                $this->apellidos = $votanteExistente->apellidos;
-                $this->telefono = $votanteExistente->telefono;
-                $this->email = $votanteExistente->email;
-                $this->direccion = $votanteExistente->direccion;
-                $this->barrio = $votanteExistente->barrio;
-                $this->zona = $votanteExistente->zona;
-                $this->distrito = $votanteExistente->distrito;
+                Log::info("Votante encontrado para CI: {$this->ci}", [
+                    'id' => $votanteExistente->id,
+                    'nombres' => $votanteExistente->nombres,
+                    'apellidos' => $votanteExistente->apellidos
+                ]);
+                
+                // Llenar todos los campos con los datos encontrados - con manejo seguro de null
+                $this->nombres = $votanteExistente->nombres ?? '';
+                $this->apellidos = $votanteExistente->apellidos ?? '';
+                $this->telefono = $votanteExistente->telefono ?? '';
+                $this->email = $votanteExistente->email ?? '';
+                $this->direccion = $votanteExistente->direccion ?? '';
+                $this->barrio = $votanteExistente->barrio ?? '';
+                $this->zona = $votanteExistente->zona ?? '';
+                $this->distrito = $votanteExistente->distrito ?? '';
                 $this->latitud = $votanteExistente->latitud;
                 $this->longitud = $votanteExistente->longitud;
                 
-                // Datos electorales TSJE
-                $this->nro_registro = $votanteExistente->nro_registro;
-                $this->codigo_departamento = $votanteExistente->codigo_departamento;
-                $this->departamento = $votanteExistente->departamento;
-                $this->codigo_distrito = $votanteExistente->codigo_distrito;
-                $this->codigo_seccion = $votanteExistente->codigo_seccion;
-                $this->seccion = $votanteExistente->seccion;
-                $this->codigo_barrio = $votanteExistente->codigo_barrio;
-                $this->barrio_tsje = $votanteExistente->barrio_tsje;
-                $this->local_votacion = $votanteExistente->local_votacion;
-                $this->descripcion_local = $votanteExistente->descripcion_local;
-                $this->mesa = $votanteExistente->mesa;
+                // Datos electorales TSJE - con manejo seguro de null
+                $this->nro_registro = $votanteExistente->nro_registro ?? '';
+                $this->codigo_departamento = $votanteExistente->codigo_departamento ?? '';
+                $this->departamento = $votanteExistente->departamento ?? '';
+                $this->codigo_distrito = $votanteExistente->codigo_distrito ?? '';
+                $this->codigo_seccion = $votanteExistente->codigo_seccion ?? '';
+                $this->seccion = $votanteExistente->seccion ?? '';
+                $this->codigo_barrio = $votanteExistente->codigo_barrio ?? '';
+                $this->barrio_tsje = $votanteExistente->barrio_tsje ?? '';
+                $this->local_votacion = $votanteExistente->local_votacion ?? '';
+                $this->descripcion_local = $votanteExistente->descripcion_local ?? '';
+                $this->mesa = $votanteExistente->mesa ?? '';
                 $this->orden = $votanteExistente->orden;
-                $this->fecha_nacimiento = $votanteExistente->fecha_nacimiento ? 
-                    $votanteExistente->fecha_nacimiento->format('Y-m-d') : null;
-                $this->fecha_afiliacion = $votanteExistente->fecha_afiliacion ? 
-                    $votanteExistente->fecha_afiliacion->format('Y-m-d') : null;
+                
+                // Manejo seguro de fechas
+                $this->fecha_nacimiento = null;
+                $this->fecha_afiliacion = null;
+                
+                try {
+                    if ($votanteExistente->fecha_nacimiento && !empty($votanteExistente->fecha_nacimiento)) {
+                        $this->fecha_nacimiento = is_string($votanteExistente->fecha_nacimiento) ? 
+                            $votanteExistente->fecha_nacimiento : 
+                            $votanteExistente->fecha_nacimiento->format('Y-m-d');
+                    }
+                    
+                    if ($votanteExistente->fecha_afiliacion && !empty($votanteExistente->fecha_afiliacion)) {
+                        $this->fecha_afiliacion = is_string($votanteExistente->fecha_afiliacion) ? 
+                            $votanteExistente->fecha_afiliacion : 
+                            $votanteExistente->fecha_afiliacion->format('Y-m-d');
+                    }
+                } catch (\Exception $dateException) {
+                    Log::warning('Error procesando fechas: ' . $dateException->getMessage());
+                }
                 
                 // Datos de campaña - solo si estamos en modo creación
                 if (!$this->votanteId) {
                     $this->lider_asignado_id = $votanteExistente->lider_asignado_id;
-                    $this->codigo_intencion = $votanteExistente->codigo_intencion;
-                    $this->estado_contacto = $votanteExistente->estado_contacto;
-                    $this->necesita_transporte = $votanteExistente->necesita_transporte;
-                    $this->notas = $votanteExistente->notas;
+                    $this->codigo_intencion = $votanteExistente->codigo_intencion ?? 'C';
+                    $this->estado_contacto = $votanteExistente->estado_contacto ?? 'Nuevo';
+                    $this->necesita_transporte = (bool) $votanteExistente->necesita_transporte;
+                    $this->notas = $votanteExistente->notas ?? '';
                 }
                 
                 $this->datosEncontrados = true;
@@ -205,7 +227,15 @@ class VotanteForm extends Component
                     }
                 }
                 
-                Log::info("Votante encontrado localmente para CI: {$this->ci}");
+                // Forzar actualización del componente Livewire
+                $this->dispatch('votante-encontrado');
+                
+                Log::info("Datos cargados exitosamente para votante CI: {$this->ci}", [
+                    'nombres_cargado' => $this->nombres,
+                    'apellidos_cargado' => $this->apellidos,
+                    'telefono_cargado' => $this->telefono
+                ]);
+                
                 return;
             }
             
