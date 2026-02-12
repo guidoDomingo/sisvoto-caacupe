@@ -36,9 +36,40 @@ class VotantesList extends Component
         'search' => ['except' => ''],
         'filtroIntencion' => ['except' => ''],
         'filtroEstado' => ['except' => ''],
+        'filtroEstadoVoto' => ['except' => ''],
+        'filtroTransporte' => ['except' => ''],
+        'filtroLider' => ['except' => ''],
+        'filtroDistrito' => ['except' => ''],
+        'sortBy' => ['except' => 'created_at'],
+        'sortDir' => ['except' => 'desc'],
     ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroIntencion()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroEstado()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroEstadoVoto()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroLider()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroDistrito()
     {
         $this->resetPage();
     }
@@ -278,13 +309,16 @@ class VotantesList extends Component
         }
 
         // Búsqueda
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('nombres', 'like', '%' . $this->search . '%')
-                    ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                    ->orWhere('ci', 'like', '%' . $this->search . '%')
-                    ->orWhere('telefono', 'like', '%' . $this->search . '%');
-            });
+        if (!empty($this->search)) {
+            $searchTerm = trim($this->search);
+            if (strlen($searchTerm) >= 2) {
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('nombres', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('apellidos', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('ci', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('telefono', 'like', '%' . $searchTerm . '%');
+                });
+            }
         }
 
         // Filtros
