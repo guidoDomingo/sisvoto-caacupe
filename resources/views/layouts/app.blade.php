@@ -16,7 +16,7 @@
     @livewireStyles
 </head>
 <body class="font-sans antialiased bg-gray-50">
-    <div class="min-h-screen">
+    <div class="min-h-screen flex">
         @auth
             <!-- Mobile Overlay -->
             <div 
@@ -35,7 +35,7 @@
             </div>
 
             <!-- Navigation -->
-            <nav class="bg-white border-b border-gray-200 fixed w-full z-30 top-0" x-data="{ userDropdown: false }">
+            <nav class="bg-white border-b border-gray-200 fixed w-full z-50 top-0" x-data="{ userDropdown: false }">
                 <div class="px-3 py-3 lg:px-5 lg:pl-3">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center justify-start">
@@ -90,7 +90,7 @@
                  x-transition.opacity.duration.300ms
                  @toggle-sidebar-overlay.window="show = $event.detail.open"
                  @click="$dispatch('toggle-sidebar')"
-                 class="lg:hidden fixed inset-0 z-10 bg-black bg-opacity-50"></div>
+                 class="lg:hidden fixed inset-0 z-45 bg-black bg-opacity-50"></div>
 
             <!-- Sidebar -->
             <aside x-data="{ 
@@ -131,19 +131,19 @@
                    @resize.window="handleResize()"
                    @keydown.window="handleKeydown($event)"
                    @click.away="close()"
-                   class="fixed top-0 left-0 z-30 w-64 h-screen pt-20 bg-white border-r border-gray-200 lg:translate-x-0 lg:static lg:transform-none shadow-lg lg:shadow-none"
+                   class="fixed top-0 left-0 z-40 w-64 h-screen pt-16 bg-white border-r border-gray-200 lg:translate-x-0 lg:static lg:transform-none shadow-lg lg:shadow-none lg:pt-0 lg:z-auto"
                    aria-label="Sidebar">
                 
                 <!-- Close button for mobile -->
                 <button @click="open = false" 
-                        class="lg:hidden absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600">
+                        class="lg:hidden absolute top-20 right-4 p-2 text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
                 </button>
 
-                <div class="h-full px-3 pb-4 overflow-y-auto bg-white">
-                    <ul class="space-y-2 font-medium">
+                <div class="h-full px-4 py-6 lg:py-4 pb-4 overflow-y-auto bg-white">
+                    <ul class="space-y-1 font-medium">
                         @if(Auth::user()->esAdmin())
                         <li>
                             <a href="{{ route('dashboard') }}" @click="close()" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600' : '' }}">
@@ -264,9 +264,11 @@
             </aside>
 
             <!-- Main Content -->
-            <div class="lg:ml-64 transition-all duration-300">
-                <div class="p-4 mt-14">
-                    {{ $slot }}
+            <div class="flex-1 flex flex-col lg:ml-0">
+                <div class="p-4 lg:p-6 pt-20 lg:pt-4 bg-gray-50 min-h-screen overflow-auto">
+                    <div class="max-w-7xl mx-auto w-full">
+                        {{ $slot }}
+                    </div>
                 </div>
             </div>
         @else

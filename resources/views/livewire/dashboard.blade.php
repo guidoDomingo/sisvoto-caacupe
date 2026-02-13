@@ -1,8 +1,8 @@
-<div>
+<div class="space-y-6">
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
         <!-- Total Votantes -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
                     <div class="rounded-md bg-blue-500 p-3">
@@ -25,7 +25,7 @@
         </div>
 
         <!-- Ya Votaron -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
                     <div class="rounded-md bg-green-500 p-3">
@@ -38,10 +38,10 @@
                     <dl>
                         <dt class="text-sm font-medium text-gray-500 truncate">Ya Votaron</dt>
                         <dd class="flex items-baseline">
-                            <div class="text-2xl font-semibold text-gray-900">
+                            <div class="text-3xl font-bold text-gray-900">
                                 {{ $metricas['ya_votaron'] ?? 0 }}
                             </div>
-                            <div class="ml-2 text-sm text-gray-600">
+                            <div class="ml-2 text-sm text-green-600 font-medium">
                                 ({{ number_format($metricas['porcentaje_votacion'] ?? 0, 1) }}%)
                             </div>
                         </dd>
@@ -51,7 +51,7 @@
         </div>
 
         <!-- Contactados -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
                     <div class="rounded-md bg-yellow-500 p-3">
@@ -64,11 +64,11 @@
                     <dl>
                         <dt class="text-sm font-medium text-gray-500 truncate">Contactados</dt>
                         <dd class="flex items-baseline">
-                            <div class="text-2xl font-semibold text-gray-900">
+                            <div class="text-3xl font-bold text-gray-900">
                                 {{ $metricas['contactados'] ?? 0 }}
                             </div>
                             @if(isset($metricas['total_votantes']) && $metricas['total_votantes'] > 0)
-                            <div class="ml-2 text-sm text-gray-600">
+                            <div class="ml-2 text-sm text-yellow-600 font-medium">
                                 ({{ number_format(($metricas['contactados'] / $metricas['total_votantes']) * 100, 1) }}%)
                             </div>
                             @endif
@@ -79,7 +79,7 @@
         </div>
 
         <!-- Votos Estimados -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
                     <div class="rounded-md bg-purple-500 p-3">
@@ -92,7 +92,7 @@
                     <dl>
                         <dt class="text-sm font-medium text-gray-500 truncate">Votos Estimados</dt>
                         <dd class="flex items-baseline">
-                            <div class="text-2xl font-semibold text-gray-900">
+                            <div class="text-3xl font-bold text-gray-900">
                                 {{ number_format($prediccion['votos_estimados'] ?? 0, 1) }}
                             </div>
                         </dd>
@@ -103,9 +103,9 @@
     </div>
 
     <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6">
         <!-- Intención de Voto -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 border border-gray-100">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Intención de Voto</h3>
             <div class="space-y-3">
                 @php
